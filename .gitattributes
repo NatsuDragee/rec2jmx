@@ -1,0 +1,3 @@
+# Keep LF in the repository on every platform (fixtures and tests compare exact text).
+* text=auto eol=lf
+*.png binary
