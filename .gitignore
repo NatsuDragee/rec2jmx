@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.venv/
+# Generated artifacts and local recordings should not be committed by accident.
+*.jmx
+*.har
+*.jtl
+jmeter.log
+!tests/fixtures/**

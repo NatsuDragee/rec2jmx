@@ -1,0 +1,5 @@
+curl ^"https://api.example.test/api/v1/search?q=red^&size=10^" ^
+  -H ^"accept: application/json^" ^
+  -H ^"content-type: application/json^" ^
+  --data-raw ^"^{^\^"term^\^":^\^"red shoes^\^"^}^" ^
+  --compressed

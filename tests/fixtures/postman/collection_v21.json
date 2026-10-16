@@ -1,0 +1,69 @@
+{
+  "info": {
+    "name": "Example Store API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {"key": "baseUrl", "value": "https://api.example.test/v3"},
+    {"key": "apiToken", "value": "pm-token-0123456789abcdef"}
+  ],
+  "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{apiToken}}", "type": "string"}]},
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [{"listen": "test", "script": {"exec": ["pm.environment.set('t', pm.response.json().token)"]}}],
+          "request": {
+            "auth": {"type": "noauth"},
+            "method": "POST",
+            "header": [{"key": "X-Client", "value": "{{clientId}}"}, {"key": "X-Old", "value": "1", "disabled": true}],
+            "body": {"mode": "urlencoded", "urlencoded": [
+              {"key": "username", "value": "test.user"},
+              {"key": "password", "value": "pw-Example-42"},
+              {"key": "unused", "value": "x", "disabled": true}
+            ]},
+            "url": {"raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Catalog",
+      "item": [
+        {
+          "name": "Search",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/products?q=lamp&rid={{$guid}}"
+          }
+        },
+        {
+          "name": "GraphQL",
+          "request": {
+            "method": "POST",
+            "body": {"mode": "graphql", "graphql": {"query": "query { product(id: 1) { name } }", "variables": "{\"a\": 1}"}},
+            "url": "{{baseUrl}}/graphql"
+          }
+        },
+        {
+          "name": "Upload image",
+          "request": {
+            "method": "POST",
+            "auth": {"type": "apikey", "apikey": [{"key": "key", "value": "X-Api-Key"}, {"key": "value", "value": "ak-99887766554433"}, {"key": "in", "value": "header"}]},
+            "body": {"mode": "formdata", "formdata": [
+              {"key": "caption", "value": "lamp", "type": "text"},
+              {"key": "image", "type": "file", "src": "C:\\Users\\someone\\lamp.jpg"}
+            ]},
+            "url": "{{baseUrl}}/images"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "request": {"method": "GET", "url": "{{gatewayUrl}}/health"}
+    }
+  ]
+}

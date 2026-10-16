@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rec2jmx"
+version = "0.1.0"
+description = "Convert recorded HTTP traffic and API test scenarios (HAR, cURL, JMX, Postman, JSON) into Apache JMeter test plans"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []  # standard library only
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[project.scripts]
+rec2jmx = "rec2jmx.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"rec2jmx.web" = ["static/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+markers = [
+    "jmeter: needs a local Apache JMeter install (JMETER_HOME); skipped otherwise",
+    "browser: needs a local Chrome or Edge (CHROME_PATH); skipped otherwise",
+]

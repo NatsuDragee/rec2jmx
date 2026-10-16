@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>rec2jmx - Recording to JMeter</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="logo">&#9654;</span> rec2jmx</div>
+  <ol class="steps" aria-label="Progress">
+    <li id="st-import" class="active">Import</li>
+    <li id="st-review">Review</li>
+    <li id="st-generate">Generate</li>
+  </ol>
+  <div id="fileInfo" class="file-info" hidden></div>
+  <div class="spacer"></div>
+  <span id="busy" class="busy" hidden>Updating&hellip;</span>
+  <button id="warnBadge" class="warn-badge" type="button" hidden></button>
+  <button id="newImport" class="ghost" type="button" hidden>New import</button>
+  <button id="openGenerate" class="primary" type="button" hidden>Generate .jmx</button>
+</header>
+<div id="banners" class="banners"></div>
+
+<main id="importView" class="import-view">
+  <section class="hero">
+    <h1>Turn a recording into a JMeter test plan</h1>
+    <p class="muted">Import a recording, review the flows and every request header, then generate and download a
+      validated <code>.jmx</code>. Everything runs on this machine; recorded requests are never sent anywhere.</p>
+    <div id="drop" class="drop" tabindex="0" role="button" aria-label="Choose a recording file">
+      <div class="drop-icon">&#8679;</div>
+      <div class="drop-title">Drop a recording here</div>
+      <div class="muted">or <label class="link">choose a file<input id="file" type="file" hidden></label></div>
+    </div>
+    <p id="import-error" class="error" role="alert"></p>
+    <div class="format-chips">
+      <span class="fchip">HAR</span><span class="fchip">cURL</span><span class="fchip">JMeter .jmx</span>
+      <span class="fchip">Postman v2.0/v2.1</span><span class="fchip">rec2jmx JSON</span>
+    </div>
+    <details class="import-options">
+      <summary>Import options</summary>
+      <div class="grid">
+        <label>Group requests by
+          <select id="groupBy">
+            <option value="auto">auto (recorded groups, else time gaps)</option>
+            <option value="recorded">recorded groups</option>
+            <option value="gap">time gaps</option>
+            <option value="single">single flow</option>
+          </select>
+        </label>
+        <label>Gap seconds <input id="gapSeconds" type="number" min="0.1" step="0.5" value="5"></label>
+        <label class="inline"><input id="includeStatic" type="checkbox"> Include static resources (HAR)</label>
+      </div>
+    </details>
+    <aside class="notice">
+      <strong>HTTP traffic only.</strong> JMeter replays HTTP(S) requests. It does not replay Android/iOS or browser UI
+      interactions. A plan generated from a mobile capture load-tests the captured API calls, not the app's UI.
+    </aside>
+  </section>
+</main>
+
+<main id="workspace" class="workspace" hidden>
+  <aside class="left">
+    <section class="pane-section">
+      <div class="section-title">
+        <span>Hosts</span>
+        <button id="excludeThirdParty" class="link-btn" type="button" hidden>Exclude third-party</button>
+      </div>
+      <div id="hostChips" class="chips"></div>
+    </section>
+    <section class="pane-section grow">
+      <div class="section-title"><span>Flows</span>
+        <span class="flow-actions">
+          <button id="mergeSelected" class="link-btn" type="button" hidden></button>
+          <button id="clearSelection" class="link-btn" type="button" hidden>Clear selection</button>
+        </span>
+      </div>
+      <p class="muted small hint">Drag to reorder &middot; <strong>&#9998; Rename</strong> (or click the TX name) to name a transaction &middot; tick flows and choose
+        <strong>Merge selected</strong> (or use <strong>Merge &darr;</strong>) to put their requests in one transaction.</p>
+      <div id="tree" class="tree"></div>
+      <div id="newFlowZone" class="new-flow-zone">+ Drop a request here to start a new flow</div>
+      <details id="filtered" class="filtered" hidden>
+        <summary id="filteredSummary"></summary>
+        <div id="filteredList"></div>
+      </details>
+    </section>
+  </aside>
+  <section class="right">
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-tab="request" role="tab" type="button">Request</button>
+      <button class="tab" data-tab="correlations" role="tab" type="button">Correlations <span class="count" id="cnt-correlations"></span></button>
+      <button class="tab" data-tab="secrets" role="tab" type="button">Secrets <span class="count" id="cnt-secrets"></span></button>
+      <button class="tab" data-tab="messages" role="tab" type="button">Messages <span class="count" id="cnt-messages"></span></button>
+    </nav>
+    <div id="panel-request" class="panel"></div>
+    <div id="panel-correlations" class="panel" hidden></div>
+    <div id="panel-secrets" class="panel" hidden></div>
+    <div id="panel-messages" class="panel" hidden></div>
+  </section>
+</main>
+
+<div id="generateDialog" class="modal" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="genTitle">
+    <header class="modal-head">
+      <h2 id="genTitle">Generate JMeter plan</h2>
+      <button id="closeGenerate" class="ghost icon" type="button" aria-label="Close">&times;</button>
+    </header>
+    <div id="genForm" class="modal-body">
+      <div class="grid">
+        <label>Test Plan name <input id="planName" type="text"></label>
+        <label>Secrets
+          <select id="secretPolicy">
+            <option value="include" selected>Include recorded values</option>
+            <option value="parameterize">Parameterize (supply at run time with -J)</option>
+          </select>
+          <span id="secretNote" class="muted small"></span>
+        </label>
+      </div>
+      <label class="inline"><input id="paramHosts" type="checkbox" checked> Parameterize hosts (HOST_n / PORT_n / PROTOCOL_n)</label>
+      <fieldset>
+        <legend>Validation (local only)</legend>
+        <label class="inline"><input id="validateJmeter" type="checkbox"> Load the plan in local JMeter (0 threads, no requests sent)</label>
+        <label class="inline"><input id="validateMock" type="checkbox"> Run one iteration against a 127.0.0.1 mock server</label>
+        <p class="muted small">Needs JMeter (JMETER_HOME) and parameterized hosts. No host from the recording is contacted.</p>
+      </fieldset>
+      <p class="muted small">The plan replays HTTP(S) requests only; it does not test mobile or browser UI behaviour.</p>
+      <p id="generate-error" class="error" role="alert"></p>
+      <div class="actions"><button id="generate" class="primary" type="button">Generate .jmx</button></div>
+    </div>
+    <div id="genResult" class="modal-body" hidden></div>
+  </div>
+</div>
+<div id="toast" class="toast" hidden></div>
+<script src="/app.js"></script>
+</body>
+</html>

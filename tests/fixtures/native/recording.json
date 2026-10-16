@@ -1,0 +1,29 @@
+{
+  "format": "rec2jmx-recording",
+  "version": 1,
+  "name": "Android checkout capture",
+  "flows": [
+    {
+      "name": "Launch",
+      "requests": [
+        {"method": "GET", "url": "https://m.example.test/v1/bootstrap?app=android&ver=5.2.0",
+         "headers": {"User-Agent": "ExampleApp/5.2.0 (Android 15)"},
+         "startedAt": "2026-02-01T08:00:00Z", "durationMs": 120,
+         "response": {"status": 200, "headers": [{"name": "Content-Type", "value": "application/json"}],
+                      "body": {"session": {"nonce": "n-55aa77bb99cc"}}}}
+      ]
+    },
+    {
+      "name": "Place order",
+      "requests": [
+        {"method": "POST", "url": "https://m.example.test/v1/orders",
+         "headers": [{"name": "Content-Type", "value": "application/json"}, {"name": "X-Nonce", "value": "n-55aa77bb99cc"}],
+         "body": {"json": {"sku": "SKU-9", "qty": 1}},
+         "startedAt": "2026-02-01T08:00:03Z", "durationMs": 300,
+         "response": {"status": 201, "body": "{\"id\":\"o-1\"}"}},
+        {"method": "POST", "url": "https://m.example.test/v1/feedback",
+         "body": {"form": [{"name": "stars", "value": "4"}, {"name": "text", "value": "fast & easy"}]}}
+      ]
+    }
+  ]
+}
